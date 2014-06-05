@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Practica Redes</title>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+  </head>
+	<body>
+	<div class="container">
+
+     <div class="header">
+        <ul class="nav nav-pills pull-right">
+        </ul>
+        <center><h3 class="text-muted" align:>Conecta 4</h3></center>
+        <center><p> Trata de unir 4 simbolos de manera horizontal, vertical o diagonal.
+        </p></center>
+      </div>
+       
+      	<center>
+  			<table align="center">
+					<tbody>
+						<tr>
+							<td style="font-weight:bolder; width: 30px" ><input style ="  width: 50px; height: 50px; border: 1px solid #666;"class="square" type="button" value=" " id="b0" /></td>
+							<td style= "font-weight:bolder; width: 30px" ><input style ="  width: 50px; height: 50px; border: 1px solid #666;"class="square" type="button" value=" " id="b1" /></td>
+							<td style= "font-weight:bolder; width: 30px"><input style ="  width: 50px; height: 50px; border: 1px solid #666;"class="square" type="button" value=" " id="b2" /></td>
+							<td style= "font-weight:bolder; width: 30px"><input style ="  width: 50px; height: 50px; border: 1px solid #666;"class="square" type="button" value=" " id="b3" /></td>
+						</tr>
+						<tr >
+							<td ><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b4" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b5" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;"  class="square" type="button" value=" " id="b6" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;"  class="square" type="button" value=" " id="b7" /></td>
+						</tr>
+						<tr>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b8" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b9" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b10" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b11" /></td>
+						</tr>
+						<tr>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b12" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b13" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b14" /></td>
+							<td><input style ="  width: 50px; height: 50px; border: 1px solid #666;" class="square" type="button" value=" " id="b15" /></td>
+						</tr>
+					</tbody>
+			</table>
+			<br />
+      <div class="footer">
+        <p>Javier Cepas Vilches</p>
+      </div>
+    </div></center>
+	</body>
+
+        <script src="/socket.io/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script>
+		  $(document).ready(function () {
+				var game_id; //Creamos una variable indicando el ID de nuestra partida
+				var me = 2; // me=2 estamos indicando que somos O y no X
+
+				var socket = io.connect('http://localhost:3000');
+
+				socket.emit('esperandoJuego');
+
+				socket.on('juegoCompartido', function () {
+					socket.emit('creandoJuego');
+				});
+
+
+				socket.on('juegoCreado', function (data) {
+					$('#log').append('Juego creado, esperando oponente <br />');
+					game_id = data.game_id;
+					me = 1;
+				});
+
+				socket.on('empezar', function (data) {
+					game_id = data.game_id;
+					var	turno = data.turn;
+
+
+					if (turno)
+				       		$('#log').append('Empieza el juego, tu turno<br />');
+					else
+						$('#log').append('Empieza el juego, turno oponente<br />');
+				});
+
+				socket.on('movimiento', function (data) {
+					var square = '#b'+data.square;
+					var value = (data.sign == 1) ? 'O' : 'X';
+
+					$(square).val(value);
+					turno = data.turn;
+				});
+
+				socket.on('error', function (data) {
+					alert(data.description);
+				});
+
+				socket.on('juegoTerminado', function (data) {
+					if (data.winner == me)
+						alert('¡¡¡¡VICTORIA!!!!');
+					else if (data.winner == 0)
+						alert('Empate --!');
+					else
+						alert('Derrota :(');
+
+					$('.square').attr('disabled', true);	
+				});
+
+				$('.square').click(function () {
+
+					var square = parseFloat( $(this).attr('id').substr(1) );
+					socket.emit('movimiento', {game_id: game_id, square: square}); 
+				});
+
+			});
+		</script>
+
+
+		    
+</html>
